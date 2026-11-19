@@ -89,6 +89,98 @@ point, and speed setting have no missing values. Target hardness
 is missing in 1,240 records, all from the Registration study.
 These findings will guide the preparation of the modeling dataset.
 
+### Preparing the modeling dataset
+
+I restore missing Registration target hardness values using the
+predefined settings documented in Project 2: 4 kp for Low strength
+and 7 kp for Mid and High strengths. Existing targets are retained.
+These values come from documented manufacturing settings rather
+than estimates calculated from measured hardness.
+
+I store the prepared records separately from the original imported
+data. Strength, sampling point, and speed setting are represented
+as categorical variables using factors.
+
+```{r}
+# I create a prepared copy of the imported data.
+prepared_data <- tablet_data |>
+  mutate(
+
+    # I restore missing Registration targets using the
+    # predefined values and retain existing targets.
+    target_hardness_kp = ifelse(
+      study == "Registration" & is.na(target_hardness_kp),
+      ifelse(strength == "Low", 4, 7),
+      target_hardness_kp
+    ),
+
+    # I represent the three strengths as categories.
+    strength = factor(
+      strength,
+      levels = c("Low", "Mid", "High")
+    ),
+
+    # I specify the sampling categories in process order.
+    sampling_point = factor(
+      sampling_point,
+      levels = c("Pre-Start", "Beginning", "Middle", "End")
+    ),
+
+    # I represent each speed configuration as a category.
+    speed_setting = factor(speed_setting)
+  )
+
+# I retain records with an observed hardness response.
+# I keep the response, four predictors, and tracking columns.
+model_data <- prepared_data |>
+  filter(!is.na(hardness_kp)) |>
+  select(
+    tablet_id,
+    study,
+    blend,
+    lot,
+    sample_id,
+    hardness_kp,
+    strength,
+    target_hardness_kp,
+    sampling_point,
+    speed_setting
+  )
+```
+
+Records without measured hardness are excluded because an observed
+response is needed for model fitting and evaluation. Study, blend,
+lot, sample, and record identifiers are retained for tracking and
+reviewing the data structure. The model formulas will explicitly
+specify the four selected predictors.
+
+```{r}
+# I document the number of records at each preparation stage.
+data.frame(
+  stage = c("Imported", "Prepared", "Modeling"),
+  records = c(
+    nrow(tablet_data),
+    nrow(prepared_data),
+    nrow(model_data)
+  )
+)
+
+# I check the dimensions and remaining missing values.
+dim(model_data)
+sum(is.na(model_data))
+
+# I inspect the variable types.
+str(model_data)
+
+# I check representation of each strength.
+model_data |>
+  group_by(strength) |>
+  summarize(
+    records = n(),
+    .groups = "drop"
+  )
+```
+
 ## Prediction Goal and Predictors
 
 I will compare a regression tree and a random forest for predicting
@@ -109,8 +201,8 @@ The following four variables will be considered as predictors:
 | `speed_setting` | Nominal setting or turret/feeder speed combination | Operating speed may be associated with differences in measured hardness. |
 
 Target hardness is the intended setpoint, distinct from the measured
-hardness response. Missing target values and the documented registration
-targets from Project 2 will be reviewed during data preparation.
+hardness response. Missing Registration targets are restored using
+the documented presets described in the data preparation section.
 
 ## Evaluation Metric
 
