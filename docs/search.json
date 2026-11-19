@@ -1,0 +1,79 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "",
+    "text": "This project uses the tablet manufacturing dataset introduced in ST 558 Project 2. The data contain 4,850 tablet records from 52 compression lots across three strengths: Low, Mid, and High. Records come from two engineering studies and one registration campaign.\nAvailable measurements include tablet weight, thickness, and hardness (tablet breaking force). Measurement availability varies across records, so missing values will be reviewed before selecting the modeling data.\nThis analysis will compare a tree model and a random forest for a selected prediction task. The selected model will then be made available through an API running in a Docker container."
+  },
+  {
+    "objectID": "index.html#introduction",
+    "href": "index.html#introduction",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "",
+    "text": "This project uses the tablet manufacturing dataset introduced in ST 558 Project 2. The data contain 4,850 tablet records from 52 compression lots across three strengths: Low, Mid, and High. Records come from two engineering studies and one registration campaign.\nAvailable measurements include tablet weight, thickness, and hardness (tablet breaking force). Measurement availability varies across records, so missing values will be reviewed before selecting the modeling data.\nThis analysis will compare a tree model and a random forest for a selected prediction task. The selected model will then be made available through an API running in a Docker container."
+  },
+  {
+    "objectID": "index.html#data-import-and-preparation",
+    "href": "index.html#data-import-and-preparation",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Data Import and Preparation",
+    "text": "Data Import and Preparation\n\n# I load readxl to import the original Excel workbook.\nlibrary(readxl)\n\n# I read the data worksheet without filtering the records.\ntablet_data &lt;- read_excel(\n  \"data/tablet_ipc_deidentified.xlsx\",\n  sheet = \"data\"\n)\n\n# I check the dataset dimensions and variable names.\ndim(tablet_data)\n\n[1] 4850   17\n\nnames(tablet_data)\n\n [1] \"tablet_id\"          \"study\"              \"strength\"          \n [4] \"blend\"              \"lot\"                \"condition\"         \n [7] \"target_hardness_kp\" \"speed_setting\"      \"sampling_point\"    \n[10] \"sampling_detail\"    \"equipment\"          \"sample_id\"         \n[13] \"tablet_no\"          \"weight_mg\"          \"thickness_mm\"      \n[16] \"hardness_kp\"        \"compression_date\""
+  },
+  {
+    "objectID": "index.html#prediction-goal-and-predictors",
+    "href": "index.html#prediction-goal-and-predictors",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Prediction Goal and Predictors",
+    "text": "Prediction Goal and Predictors"
+  },
+  {
+    "objectID": "index.html#evaluation-metric",
+    "href": "index.html#evaluation-metric",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Evaluation Metric",
+    "text": "Evaluation Metric"
+  },
+  {
+    "objectID": "index.html#trainingtest-split-and-cross-validation",
+    "href": "index.html#trainingtest-split-and-cross-validation",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Training/Test Split and Cross-Validation",
+    "text": "Training/Test Split and Cross-Validation"
+  },
+  {
+    "objectID": "index.html#tree-model",
+    "href": "index.html#tree-model",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Tree Model",
+    "text": "Tree Model"
+  },
+  {
+    "objectID": "index.html#random-forest-model",
+    "href": "index.html#random-forest-model",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Random Forest Model",
+    "text": "Random Forest Model"
+  },
+  {
+    "objectID": "index.html#test-set-comparison-and-model-selection",
+    "href": "index.html#test-set-comparison-and-model-selection",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Test-Set Comparison and Model Selection",
+    "text": "Test-Set Comparison and Model Selection"
+  },
+  {
+    "objectID": "index.html#final-model-fit",
+    "href": "index.html#final-model-fit",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Final Model Fit",
+    "text": "Final Model Fit"
+  },
+  {
+    "objectID": "index.html#conclusions-and-limitations",
+    "href": "index.html#conclusions-and-limitations",
+    "title": "Predictive Modeling of Tablet Manufacturing Data",
+    "section": "Conclusions and Limitations",
+    "text": "Conclusions and Limitations"
+  }
+]

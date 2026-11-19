@@ -9,3 +9,9 @@
 # Exported Docker images
 *.tar
 *.tar.gz
+
+/.quarto/
+**/*.quarto_ipynb
+
+# Local Quarto working files
+/.quarto/

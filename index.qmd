@@ -1,0 +1,55 @@
+---
+title: "Predictive Modeling of Tablet Manufacturing Data"
+author: "Aliyah Sheth"
+format:
+  html:
+    toc: true
+---
+
+## Introduction
+
+This project uses the tablet manufacturing dataset introduced in ST 558
+Project 2. The data contain 4,850 tablet records from 52 compression lots
+across three strengths: Low, Mid, and High. Records come from two
+engineering studies and one registration campaign.
+
+Available measurements include tablet weight, thickness, and hardness
+(tablet breaking force). Measurement availability varies across records,
+so missing values will be reviewed before selecting the modeling data.
+
+This analysis will compare a tree model and a random forest for a selected
+prediction task. The selected model will then be made available through
+an API running in a Docker container.
+
+## Data Import and Preparation
+
+```{r}
+# I load readxl to import the original Excel workbook.
+library(readxl)
+
+# I read the data worksheet without filtering the records.
+tablet_data <- read_excel(
+  "data/tablet_ipc_deidentified.xlsx",
+  sheet = "data"
+)
+
+# I check the dataset dimensions and variable names.
+dim(tablet_data)
+names(tablet_data)
+```
+
+## Prediction Goal and Predictors
+
+## Evaluation Metric
+
+## Training/Test Split and Cross-Validation
+
+## Tree Model
+
+## Random Forest Model
+
+## Test-Set Comparison and Model Selection
+
+## Final Model Fit
+
+## Conclusions and Limitations
