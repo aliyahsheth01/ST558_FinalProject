@@ -45,6 +45,8 @@ response and the four candidate predictors. I also identify which
 studies and strengths have missing target hardness values.
 
 ```{r}
+#| message: false
+
 # I load dplyr to filter, group, and summarize records.
 library(dplyr)
 
@@ -217,6 +219,62 @@ particularly undesirable for this prediction task. Lower RMSE
 indicates better predictive performance.
 
 ## Training/Test Split and Cross-Validation
+
+### Training/test split
+
+I randomly split the modeling records into approximately 70% training
+data and 30% test data. I set a seed for reproducibility and stratify
+by strength to preserve the representation of Low, Mid, and High
+tablets in both sets.
+
+The training data will be used for model fitting and cross-validation.
+The test data will be reserved for comparing the selected tree and
+random forest after tuning.
+
+This split assigns individual tablet records. Records from the same
+lot or sample may therefore occur in both sets. Performance estimates
+will describe held-out tablet records within the manufacturing groups
+represented in this dataset. Evaluation of entirely new lots or blends
+would require separate grouped validation.
+
+```{r}
+#| message: false
+
+# I load tidymodels for splitting and modeling functions.
+library(tidymodels)
+
+# I set a seed so the same split can be reproduced.
+set.seed(558)
+
+# I allocate records within each strength to training and test sets.
+tablet_split <- initial_split(
+  model_data,
+  prop = 0.70,
+  strata = strength
+)
+
+# I extract the two datasets from the split object.
+tablet_train <- training(tablet_split)
+tablet_test <- testing(tablet_split)
+
+# I check the number of records in each set.
+data.frame(
+  dataset = c("Training", "Test"),
+  records = c(nrow(tablet_train), nrow(tablet_test))
+)
+
+# I confirm that the two sets account for all modeling records.
+nrow(tablet_train) + nrow(tablet_test)
+
+# I confirm that no tablet record appears in both sets.
+sum(tablet_train$tablet_id %in% tablet_test$tablet_id)
+
+# I compare the strength counts in the two sets.
+rbind(
+  Training = table(tablet_train$strength),
+  Test = table(tablet_test$strength)
+)
+```
 
 ## Tree Model
 
