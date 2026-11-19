@@ -40,7 +40,38 @@ names(tablet_data)
 
 ## Prediction Goal and Predictors
 
+I will compare a regression tree and a random forest for predicting
+measured hardness for an individual tablet. The response variable is
+`hardness_kp`, which records tablet breaking force in kiloponds (kp).
+
+The initial prediction question is: How accurately can tablet hardness
+be predicted using tablet strength, target hardness, sampling point,
+and speed setting?
+
+The following four variables will be considered as predictors:
+
+| Predictor | Meaning | Reason for inclusion |
+|---|---|---|
+| `strength` | Low, Mid, or High tablet strength | The strengths have different tablet characteristics and intended hardness levels. |
+| `target_hardness_kp` | Intended hardness setpoint | The intended hardness may help explain the measured breaking force. |
+| `sampling_point` | Pre-Start, Beginning, Middle, or End | Hardness may vary across the compression run. |
+| `speed_setting` | Nominal setting or turret/feeder speed combination | Operating speed may be associated with differences in measured hardness. |
+
+Target hardness is the intended setpoint, distinct from the measured
+hardness response. Missing target values and the documented registration
+targets from Project 2 will be reviewed during data preparation.
+
 ## Evaluation Metric
+
+I will use root mean squared error (RMSE) as the primary metric for
+tuning and comparing the models. RMSE measures prediction error in
+the same units as the response, so the results can be interpreted
+in kiloponds.
+
+RMSE gives greater weight to larger prediction errors. I chose this
+metric because substantial errors in predicted tablet hardness are
+particularly undesirable for this prediction task. Lower RMSE
+indicates better predictive performance.
 
 ## Training/Test Split and Cross-Validation
 

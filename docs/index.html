@@ -201,9 +201,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="prediction-goal-and-predictors" class="level2">
 <h2 class="anchored" data-anchor-id="prediction-goal-and-predictors">Prediction Goal and Predictors</h2>
+<p>I will compare a regression tree and a random forest for predicting measured hardness for an individual tablet. The response variable is <code>hardness_kp</code>, which records tablet breaking force in kiloponds (kp).</p>
+<p>The initial prediction question is: How accurately can tablet hardness be predicted using tablet strength, target hardness, sampling point, and speed setting?</p>
+<p>The following four variables will be considered as predictors:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Predictor</th>
+<th>Meaning</th>
+<th>Reason for inclusion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>strength</code></td>
+<td>Low, Mid, or High tablet strength</td>
+<td>The strengths have different tablet characteristics and intended hardness levels.</td>
+</tr>
+<tr class="even">
+<td><code>target_hardness_kp</code></td>
+<td>Intended hardness setpoint</td>
+<td>The intended hardness may help explain the measured breaking force.</td>
+</tr>
+<tr class="odd">
+<td><code>sampling_point</code></td>
+<td>Pre-Start, Beginning, Middle, or End</td>
+<td>Hardness may vary across the compression run.</td>
+</tr>
+<tr class="even">
+<td><code>speed_setting</code></td>
+<td>Nominal setting or turret/feeder speed combination</td>
+<td>Operating speed may be associated with differences in measured hardness.</td>
+</tr>
+</tbody>
+</table>
+<p>Target hardness is the intended setpoint, distinct from the measured hardness response. Missing target values and the documented registration targets from Project 2 will be reviewed during data preparation.</p>
 </section>
 <section id="evaluation-metric" class="level2">
 <h2 class="anchored" data-anchor-id="evaluation-metric">Evaluation Metric</h2>
+<p>I will use root mean squared error (RMSE) as the primary metric for tuning and comparing the models. RMSE measures prediction error in the same units as the response, so the results can be interpreted in kiloponds.</p>
+<p>RMSE gives greater weight to larger prediction errors. I chose this metric because substantial errors in predicted tablet hardness are particularly undesirable for this prediction task. Lower RMSE indicates better predictive performance.</p>
 </section>
 <section id="trainingtest-split-and-cross-validation" class="level2">
 <h2 class="anchored" data-anchor-id="trainingtest-split-and-cross-validation">Training/Test Split and Cross-Validation</h2>

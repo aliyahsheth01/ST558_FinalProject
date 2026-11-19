@@ -25,14 +25,14 @@
     "href": "index.html#prediction-goal-and-predictors",
     "title": "Predictive Modeling of Tablet Manufacturing Data",
     "section": "Prediction Goal and Predictors",
-    "text": "Prediction Goal and Predictors"
+    "text": "Prediction Goal and Predictors\nI will compare a regression tree and a random forest for predicting measured hardness for an individual tablet. The response variable is hardness_kp, which records tablet breaking force in kiloponds (kp).\nThe initial prediction question is: How accurately can tablet hardness be predicted using tablet strength, target hardness, sampling point, and speed setting?\nThe following four variables will be considered as predictors:\n\n\n\n\n\n\n\n\nPredictor\nMeaning\nReason for inclusion\n\n\n\n\nstrength\nLow, Mid, or High tablet strength\nThe strengths have different tablet characteristics and intended hardness levels.\n\n\ntarget_hardness_kp\nIntended hardness setpoint\nThe intended hardness may help explain the measured breaking force.\n\n\nsampling_point\nPre-Start, Beginning, Middle, or End\nHardness may vary across the compression run.\n\n\nspeed_setting\nNominal setting or turret/feeder speed combination\nOperating speed may be associated with differences in measured hardness.\n\n\n\nTarget hardness is the intended setpoint, distinct from the measured hardness response. Missing target values and the documented registration targets from Project 2 will be reviewed during data preparation."
   },
   {
     "objectID": "index.html#evaluation-metric",
     "href": "index.html#evaluation-metric",
     "title": "Predictive Modeling of Tablet Manufacturing Data",
     "section": "Evaluation Metric",
-    "text": "Evaluation Metric"
+    "text": "Evaluation Metric\nI will use root mean squared error (RMSE) as the primary metric for tuning and comparing the models. RMSE measures prediction error in the same units as the response, so the results can be interpreted in kiloponds.\nRMSE gives greater weight to larger prediction errors. I chose this metric because substantial errors in predicted tablet hardness are particularly undesirable for this prediction task. Lower RMSE indicates better predictive performance."
   },
   {
     "objectID": "index.html#trainingtest-split-and-cross-validation",
