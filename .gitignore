@@ -2,3 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# macOS folder metadata
+.DS_Store
+
+# Exported Docker images
+*.tar
+*.tar.gz
