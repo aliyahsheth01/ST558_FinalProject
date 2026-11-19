@@ -276,6 +276,38 @@ rbind(
 )
 ```
 
+### Five-fold cross-validation
+
+I create five cross-validation folds using only the training data.
+I stratify by strength to maintain similar proportions of Low, Mid,
+and High tablets across the folds.
+
+For each tuning configuration, the model will be fitted using four
+folds (the analysis set) and evaluated using the remaining fold
+(the assessment set). Each training record serves in an assessment
+set once. The average assessment RMSE across the five folds will
+guide tuning within each model family.
+
+Both the regression tree and random forest will use these same
+folds. The record-level grouping limitation described above also
+applies to cross-validation.
+
+```{r}
+# I set a seed to make the fold assignments reproducible.
+set.seed(559)
+
+# I create five strength-stratified folds from the training data.
+tablet_folds <- vfold_cv(
+  tablet_train,
+  v = 5,
+  strata = strength
+)
+
+# I inspect the folds and confirm that five were created.
+tablet_folds
+nrow(tablet_folds)
+```
+
 ## Tree Model
 
 ## Random Forest Model

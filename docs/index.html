@@ -135,6 +135,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#trainingtest-split-and-cross-validation" id="toc-trainingtest-split-and-cross-validation" class="nav-link" data-scroll-target="#trainingtest-split-and-cross-validation">Training/Test Split and Cross-Validation</a>
   <ul class="collapse">
   <li><a href="#trainingtest-split" id="toc-trainingtest-split" class="nav-link" data-scroll-target="#trainingtest-split">Training/test split</a></li>
+  <li><a href="#five-fold-cross-validation" id="toc-five-fold-cross-validation" class="nav-link" data-scroll-target="#five-fold-cross-validation">Five-fold cross-validation</a></li>
   </ul></li>
   <li><a href="#tree-model" id="toc-tree-model" class="nav-link" data-scroll-target="#tree-model">Tree Model</a></li>
   <li><a href="#random-forest-model" id="toc-random-forest-model" class="nav-link" data-scroll-target="#random-forest-model">Random Forest Model</a></li>
@@ -472,6 +473,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>         Low Mid High
 Training 623 791  616
 Test     267 339  264</code></pre>
+</div>
+</div>
+</section>
+<section id="five-fold-cross-validation" class="level3">
+<h3 class="anchored" data-anchor-id="five-fold-cross-validation">Five-fold cross-validation</h3>
+<p>I create five cross-validation folds using only the training data. I stratify by strength to maintain similar proportions of Low, Mid, and High tablets across the folds.</p>
+<p>For each tuning configuration, the model will be fitted using four folds (the analysis set) and evaluated using the remaining fold (the assessment set). Each training record serves in an assessment set once. The average assessment RMSE across the five folds will guide tuning within each model family.</p>
+<p>Both the regression tree and random forest will use these same folds. The record-level grouping limitation described above also applies to cross-validation.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I set a seed to make the fold assignments reproducible.</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">559</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># I create five strength-stratified folds from the training data.</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>tablet_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  tablet_train,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">v =</span> <span class="dv">5</span>,</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">strata =</span> strength</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="co"># I inspect the folds and confirm that five were created.</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>tablet_folds</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#  5-fold cross-validation using stratification 
+# A tibble: 5 × 2
+  splits             id   
+  &lt;list&gt;             &lt;chr&gt;
+1 &lt;split [1622/408]&gt; Fold1
+2 &lt;split [1624/406]&gt; Fold2
+3 &lt;split [1624/406]&gt; Fold3
+4 &lt;split [1625/405]&gt; Fold4
+5 &lt;split [1625/405]&gt; Fold5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(tablet_folds)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5</code></pre>
 </div>
 </div>
 </section>
