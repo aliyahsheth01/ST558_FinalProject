@@ -125,7 +125,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
-  <li><a href="#data-import-and-preparation" id="toc-data-import-and-preparation" class="nav-link" data-scroll-target="#data-import-and-preparation">Data Import and Preparation</a></li>
+  <li><a href="#data-import-and-preparation" id="toc-data-import-and-preparation" class="nav-link" data-scroll-target="#data-import-and-preparation">Data Import and Preparation</a>
+  <ul class="collapse">
+  <li><a href="#missing-value-review" id="toc-missing-value-review" class="nav-link" data-scroll-target="#missing-value-review">Missing-value review</a></li>
+  </ul></li>
   <li><a href="#prediction-goal-and-predictors" id="toc-prediction-goal-and-predictors" class="nav-link" data-scroll-target="#prediction-goal-and-predictors">Prediction Goal and Predictors</a></li>
   <li><a href="#evaluation-metric" id="toc-evaluation-metric" class="nav-link" data-scroll-target="#evaluation-metric">Evaluation Metric</a></li>
   <li><a href="#trainingtest-split-and-cross-validation" id="toc-trainingtest-split-and-cross-validation" class="nav-link" data-scroll-target="#trainingtest-split-and-cross-validation">Training/Test Split and Cross-Validation</a></li>
@@ -198,6 +201,75 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 [16] "hardness_kp"        "compression_date"  </code></pre>
 </div>
 </div>
+<section id="missing-value-review" class="level3">
+<h3 class="anchored" data-anchor-id="missing-value-review">Missing-value review</h3>
+<p>Before preparing the modeling dataset, I check missing values in the response and the four candidate predictors. I also identify which studies and strengths have missing target hardness values.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I load dplyr to filter, group, and summarize records.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I count missing values in the response and candidate predictors.</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>missing_counts <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">variable =</span> <span class="fu">c</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"hardness_kp"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"strength"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"target_hardness_kp"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"sampling_point"</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"speed_setting"</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">missing_records =</span> <span class="fu">c</span>(</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(<span class="fu">is.na</span>(tablet_data<span class="sc">$</span>hardness_kp)),</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(<span class="fu">is.na</span>(tablet_data<span class="sc">$</span>strength)),</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(<span class="fu">is.na</span>(tablet_data<span class="sc">$</span>target_hardness_kp)),</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(<span class="fu">is.na</span>(tablet_data<span class="sc">$</span>sampling_point)),</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>(<span class="fu">is.na</span>(tablet_data<span class="sc">$</span>speed_setting))</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>missing_counts</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            variable missing_records
+1        hardness_kp            1950
+2           strength               0
+3 target_hardness_kp            1240
+4     sampling_point               0
+5      speed_setting               0</code></pre>
+</div>
+</div>
+<p>I summarize records with missing target hardness by study and strength to understand where these missing values occur.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I count records with missing target hardness within each group.</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>tablet_data <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">is.na</span>(target_hardness_kp)) <span class="sc">|&gt;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(study, strength) <span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">missing_targets =</span> <span class="fu">n</span>(),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  study        strength missing_targets
+  &lt;chr&gt;        &lt;chr&gt;              &lt;int&gt;
+1 Registration High                 410
+2 Registration Low                  330
+3 Registration Mid                  500</code></pre>
+</div>
+</div>
+<p>Of the 4,850 source records, 1,950 lack a measured hardness value, leaving 2,900 records with an observed response. Strength, sampling point, and speed setting have no missing values. Target hardness is missing in 1,240 records, all from the Registration study. These findings will guide the preparation of the modeling dataset.</p>
+</section>
 </section>
 <section id="prediction-goal-and-predictors" class="level2">
 <h2 class="anchored" data-anchor-id="prediction-goal-and-predictors">Prediction Goal and Predictors</h2>

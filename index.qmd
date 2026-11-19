@@ -38,6 +38,57 @@ dim(tablet_data)
 names(tablet_data)
 ```
 
+### Missing-value review
+
+Before preparing the modeling dataset, I check missing values in the
+response and the four candidate predictors. I also identify which
+studies and strengths have missing target hardness values.
+
+```{r}
+# I load dplyr to filter, group, and summarize records.
+library(dplyr)
+
+# I count missing values in the response and candidate predictors.
+missing_counts <- data.frame(
+  variable = c(
+    "hardness_kp",
+    "strength",
+    "target_hardness_kp",
+    "sampling_point",
+    "speed_setting"
+  ),
+  missing_records = c(
+    sum(is.na(tablet_data$hardness_kp)),
+    sum(is.na(tablet_data$strength)),
+    sum(is.na(tablet_data$target_hardness_kp)),
+    sum(is.na(tablet_data$sampling_point)),
+    sum(is.na(tablet_data$speed_setting))
+  )
+)
+
+missing_counts
+```
+
+I summarize records with missing target hardness by study and strength
+to understand where these missing values occur.
+
+```{r}
+# I count records with missing target hardness within each group.
+tablet_data |>
+  filter(is.na(target_hardness_kp)) |>
+  group_by(study, strength) |>
+  summarize(
+    missing_targets = n(),
+    .groups = "drop"
+  )
+```
+
+Of the 4,850 source records, 1,950 lack a measured hardness value,
+leaving 2,900 records with an observed response. Strength, sampling
+point, and speed setting have no missing values. Target hardness
+is missing in 1,240 records, all from the Registration study.
+These findings will guide the preparation of the modeling dataset.
+
 ## Prediction Goal and Predictors
 
 I will compare a regression tree and a random forest for predicting
