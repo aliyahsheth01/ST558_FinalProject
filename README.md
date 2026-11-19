@@ -43,7 +43,7 @@ and the resulting modeling sample will be documented in the report.
 ## Render the Report
 
 Open `ST558_FinalProject.Rproj` in RStudio. The current report requires
-the readxl package.
+the readxl, dplyr, and tidymodels packages.
 
 Run the following in the Terminal:
 
@@ -55,6 +55,7 @@ The rendered report is saved as `docs/index.html`.
 
 ## Project Status
 
-The report outline, data import, prediction question, and evaluation
-metric are established. Model fitting, API development, and Docker
+Data preparation, missing-value checks, the reproducible 70/30
+training/test split, five-fold cross-validation, and the modeling
+recipe are complete. Model fitting, API development, and Docker
 packaging are planned next.

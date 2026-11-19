@@ -308,6 +308,35 @@ tablet_folds
 nrow(tablet_folds)
 ```
 
+### Modeling recipe
+
+I define a common recipe for both model families using the training
+data. Measured hardness is the response, and the four predictors are
+strength, target hardness, sampling point, and speed setting.
+
+Listing the predictors explicitly excludes the record, study, blend,
+lot, and sample identifiers from the model inputs.
+
+The selected variables are complete after data preparation. I retain
+categorical predictors as factors and target hardness in its original
+units. The planned tree engines can use these variable types directly,
+so this recipe requires no additional transformation steps.
+
+```{r}
+# I specify the response and the four intended predictors.
+tablet_rec <- recipe(
+  hardness_kp ~ strength + target_hardness_kp +
+    sampling_point + speed_setting,
+  data = tablet_train
+)
+
+# I inspect the variable roles assigned by the recipe.
+tablet_rec
+```
+
+During model tuning, this recipe will be included in each workflow
+and processed within the cross-validation analysis sets.
+
 ## Tree Model
 
 ## Random Forest Model

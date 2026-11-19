@@ -136,6 +136,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#trainingtest-split" id="toc-trainingtest-split" class="nav-link" data-scroll-target="#trainingtest-split">Training/test split</a></li>
   <li><a href="#five-fold-cross-validation" id="toc-five-fold-cross-validation" class="nav-link" data-scroll-target="#five-fold-cross-validation">Five-fold cross-validation</a></li>
+  <li><a href="#modeling-recipe" id="toc-modeling-recipe" class="nav-link" data-scroll-target="#modeling-recipe">Modeling recipe</a></li>
   </ul></li>
   <li><a href="#tree-model" id="toc-tree-model" class="nav-link" data-scroll-target="#tree-model">Tree Model</a></li>
   <li><a href="#random-forest-model" id="toc-random-forest-model" class="nav-link" data-scroll-target="#random-forest-model">Random Forest Model</a></li>
@@ -510,6 +511,43 @@ Test     267 339  264</code></pre>
 <pre><code>[1] 5</code></pre>
 </div>
 </div>
+</section>
+<section id="modeling-recipe" class="level3">
+<h3 class="anchored" data-anchor-id="modeling-recipe">Modeling recipe</h3>
+<p>I define a common recipe for both model families using the training data. Measured hardness is the response, and the four predictors are strength, target hardness, sampling point, and speed setting.</p>
+<p>Listing the predictors explicitly excludes the record, study, blend, lot, and sample identifiers from the model inputs.</p>
+<p>The selected variables are complete after data preparation. I retain categorical predictors as factors and target hardness in its original units. The planned tree engines can use these variable types directly, so this recipe requires no additional transformation steps.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I specify the response and the four intended predictors.</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>tablet_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  hardness_kp <span class="sc">~</span> strength <span class="sc">+</span> target_hardness_kp <span class="sc">+</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    sampling_point <span class="sc">+</span> speed_setting,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> tablet_train</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="co"># I inspect the variable roles assigned by the recipe.</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>tablet_rec</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Recipe ──────────────────────────────────────────────────────────────────────</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Inputs </code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Number of variables by role</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>outcome:   1
+predictor: 4</code></pre>
+</div>
+</div>
+<p>During model tuning, this recipe will be included in each workflow and processed within the cross-validation analysis sets.</p>
 </section>
 </section>
 <section id="tree-model" class="level2">
