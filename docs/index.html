@@ -142,6 +142,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#how-a-regression-tree-works" id="toc-how-a-regression-tree-works" class="nav-link" data-scroll-target="#how-a-regression-tree-works">How a regression tree works</a></li>
   <li><a href="#model-specification-and-tuning-grid" id="toc-model-specification-and-tuning-grid" class="nav-link" data-scroll-target="#model-specification-and-tuning-grid">Model specification and tuning grid</a></li>
+  <li><a href="#cross-validation-results" id="toc-cross-validation-results" class="nav-link" data-scroll-target="#cross-validation-results">Cross-validation results</a></li>
+  <li><a href="#selected-tree-and-training-fit" id="toc-selected-tree-and-training-fit" class="nav-link" data-scroll-target="#selected-tree-and-training-fit">Selected tree and training fit</a></li>
   </ul></li>
   <li><a href="#random-forest-model" id="toc-random-forest-model" class="nav-link" data-scroll-target="#random-forest-model">Random Forest Model</a></li>
   <li><a href="#test-set-comparison-and-model-selection" id="toc-test-set-comparison-and-model-selection" class="nav-link" data-scroll-target="#test-set-comparison-and-model-selection">Test-Set Comparison and Model Selection</a></li>
@@ -581,12 +583,12 @@ predictor: 4</code></pre>
 <tbody>
 <tr class="odd">
 <td><code>tree_depth</code></td>
-<td>1, 3, 5, 7, 9</td>
+<td>Every integer from 1 through 30</td>
 <td>Maximum number of splits along a root-to-leaf path</td>
 </tr>
 <tr class="even">
 <td><code>cost_complexity</code></td>
-<td>0.0001, 0.001, 0.01, 0.1</td>
+<td>0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1</td>
 <td>Complexity penalty; larger values favor smaller trees</td>
 </tr>
 <tr class="odd">
@@ -597,7 +599,7 @@ predictor: 4</code></pre>
 </tbody>
 </table>
 <p>The depth values cover shallow through more flexible trees. The complexity penalties span several orders of magnitude to compare weaker and stronger restrictions on tree size.</p>
-<p>This grid contains 20 parameter combinations. I will compare them using the existing five cross-validation folds and select the combination with the lowest mean assessment RMSE.</p>
+<p>This grid contains 180 parameter combinations. I will compare them using the existing five cross-validation folds and select the combination with the lowest mean assessment RMSE.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I define the tree model and identify the parameters to tune.</span></span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>tree_spec <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(</span>
@@ -613,12 +615,12 @@ predictor: 4</code></pre>
 <span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(tablet_rec) <span class="sc">|&gt;</span></span>
 <span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(tree_spec)</span>
 <span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co"># I create four complexity values and five depth values.</span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co"># I compare six complexity penalties and 30 possible maximum depths.</span></span>
 <span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Cost-complexity ranges use the log10 scale.</span></span>
 <span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>tree_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
-<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cost_complexity</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="sc">-</span><span class="dv">1</span>)),</span>
-<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tree_depth</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>L, <span class="dv">9</span>L)),</span>
-<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>)</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cost_complexity</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">6</span>, <span class="sc">-</span><span class="dv">1</span>)),</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tree_depth</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>L, <span class="dv">30</span>L)),</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">6</span>, <span class="dv">30</span>)</span>
 <span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a><span class="co"># I inspect the workflow and candidate parameter combinations.</span></span>
@@ -643,33 +645,173 @@ Computational engine: rpart </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>tree_grid</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 20 × 2
+<pre><code># A tibble: 180 × 2
    cost_complexity tree_depth
              &lt;dbl&gt;      &lt;int&gt;
- 1          0.0001          1
- 2          0.001           1
- 3          0.01            1
- 4          0.1             1
- 5          0.0001          3
- 6          0.001           3
- 7          0.01            3
- 8          0.1             3
- 9          0.0001          5
-10          0.001           5
-11          0.01            5
-12          0.1             5
-13          0.0001          7
-14          0.001           7
-15          0.01            7
-16          0.1             7
-17          0.0001          9
-18          0.001           9
-19          0.01            9
-20          0.1             9</code></pre>
+ 1        0.000001          1
+ 2        0.00001           1
+ 3        0.0001            1
+ 4        0.001             1
+ 5        0.01              1
+ 6        0.1               1
+ 7        0.000001          2
+ 8        0.00001           2
+ 9        0.0001            2
+10        0.001             2
+# ℹ 170 more rows</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(tree_grid)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 20</code></pre>
+<pre><code>[1] 180</code></pre>
+</div>
+</div>
+<p>I expanded the initial grid after the best settings occurred at search boundaries. The final grid evaluates six complexity penalties and every integer maximum depth from 1 through 30.</p>
+</section>
+<section id="cross-validation-results" class="level3">
+<h3 class="anchored" data-anchor-id="cross-validation-results">Cross-validation results</h3>
+<p>I evaluate the candidate parameter combinations using the five strength-stratified cross-validation folds created from the training data. RMSE is calculated on each assessment fold and averaged across folds to compare the candidate settings.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I set a seed for reproducible tuning.</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">560</span>)</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co"># I evaluate the candidate settings using the training folds.</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>tree_tune <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  tree_wf,</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> tablet_folds,</span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid =</span> tree_grid,</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">metrics =</span> <span class="fu">metric_set</span>(rmse)</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="co"># I inspect the tuning output and any recorded warnings or errors.</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>tree_tune</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># Tuning results
+# 5-fold cross-validation using stratification 
+# A tibble: 5 × 4
+  splits             id    .metrics           .notes          
+  &lt;list&gt;             &lt;chr&gt; &lt;list&gt;             &lt;list&gt;          
+1 &lt;split [1622/408]&gt; Fold1 &lt;tibble [180 × 6]&gt; &lt;tibble [0 × 4]&gt;
+2 &lt;split [1624/406]&gt; Fold2 &lt;tibble [180 × 6]&gt; &lt;tibble [0 × 4]&gt;
+3 &lt;split [1624/406]&gt; Fold3 &lt;tibble [180 × 6]&gt; &lt;tibble [0 × 4]&gt;
+4 &lt;split [1625/405]&gt; Fold4 &lt;tibble [180 × 6]&gt; &lt;tibble [0 × 4]&gt;
+5 &lt;split [1625/405]&gt; Fold5 &lt;tibble [180 × 6]&gt; &lt;tibble [0 × 4]&gt;</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_notes</span>(tree_tune)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 0 × 5
+# ℹ 5 variables: id &lt;chr&gt;, location &lt;chr&gt;, type &lt;chr&gt;, note &lt;chr&gt;, trace &lt;list&gt;</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I summarize assessment RMSE and sort from lowest to highest.</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>tree_results <span class="ot">&lt;-</span> <span class="fu">collect_metrics</span>(tree_tune) <span class="sc">|&gt;</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(mean)</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>tree_results</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 180 × 8
+   cost_complexity tree_depth .metric .estimator  mean     n std_err .config    
+             &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;      
+ 1         0.00001          9 rmse    standard   0.300     5 0.00642 pre0_mod03…
+ 2         0.00001         10 rmse    standard   0.300     5 0.00642 pre0_mod04…
+ 3         0.00001         11 rmse    standard   0.300     5 0.00642 pre0_mod04…
+ 4         0.00001         12 rmse    standard   0.300     5 0.00642 pre0_mod04…
+ 5         0.00001         13 rmse    standard   0.300     5 0.00642 pre0_mod04…
+ 6         0.00001         14 rmse    standard   0.300     5 0.00642 pre0_mod04…
+ 7         0.00001         15 rmse    standard   0.300     5 0.00642 pre0_mod04…
+ 8         0.00001         16 rmse    standard   0.300     5 0.00642 pre0_mod04…
+ 9         0.00001         17 rmse    standard   0.300     5 0.00642 pre0_mod04…
+10         0.00001         18 rmse    standard   0.300     5 0.00642 pre0_mod04…
+# ℹ 170 more rows</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I identify the grid settings with the lowest mean RMSE.</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>tree_best <span class="ot">&lt;-</span> <span class="fu">select_best</span>(</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  tree_tune,</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">metric =</span> <span class="st">"rmse"</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>tree_best</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  cost_complexity tree_depth .config          
+            &lt;dbl&gt;      &lt;int&gt; &lt;chr&gt;            
+1         0.00001          9 pre0_mod039_post0</code></pre>
+</div>
+</div>
+</section>
+<section id="selected-tree-and-training-fit" class="level3">
+<h3 class="anchored" data-anchor-id="selected-tree-and-training-fit">Selected tree and training fit</h3>
+<p>The selected configuration has a cost-complexity penalty of 0.00001 and a maximum depth of 9. Its mean assessment RMSE across the five cross-validation folds is approximately 0.300 kp.</p>
+<p>I insert these selected settings into the workflow and fit the tree using all 2,030 training records. This fitted tree will later be compared with the tuned random forest using the held-out test data.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I replace the tuning placeholders with the selected parameter values.</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>tree_final_wf <span class="ot">&lt;-</span> <span class="fu">finalize_workflow</span>(tree_wf, tree_best)</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="co"># I fit the selected tree using all training records.</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>tree_train_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(tree_final_wf, <span class="at">data =</span> tablet_train)</span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="co"># I inspect the fitted workflow and tree.</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>tree_train_fit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>══ Workflow [trained] ══════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: decision_tree()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+0 Recipe Steps
+
+── Model ───────────────────────────────────────────────────────────────────────
+n= 2030 
+
+node), split, n, deviance, yval
+      * denotes terminal node
+
+  1) root 2030 6332.4370000  6.180739  
+    2) target_hardness_kp&lt; 5.75 734  316.2105000  4.116485  
+      4) target_hardness_kp&lt; 3.25 41    2.0595120  2.141463  
+        8) target_hardness_kp&lt; 2.25 20    0.4680000  1.960000 *
+        9) target_hardness_kp&gt;=2.25 21    0.3057143  2.314286 *
+      5) target_hardness_kp&gt;=3.25 693  144.7600000  4.233333  
+       10) target_hardness_kp&lt; 4.5 578   43.5201600  4.069723  
+         20) strength=Mid 20    0.6775000  3.925000 *
+         21) strength=Low 558   42.4087500  4.074910  
+           42) sampling_point=Pre-Start,Beginning,Middle 430   32.6906000  4.065581 *
+           43) sampling_point=End 128    9.5550000  4.106250 *
+       11) target_hardness_kp&gt;=4.5 115    8.0038260  5.055652  
+         22) strength=High 18    0.6600000  4.866667 *
+         23) strength=Low,Mid 97    6.5816490  5.090722  
+           46) sampling_point=End 10    0.8610000  4.870000 *
+           47) sampling_point=Pre-Start 87    5.1774710  5.116092  
+             94) strength=Low 24    1.3583330  5.041667 *
+             95) strength=Mid 63    3.6355560  5.144444 *
+    3) target_hardness_kp&gt;=5.75 1296 1117.1600000  7.349846  
+      6) target_hardness_kp&lt; 7.75 1112  202.8381000  7.035252  
+       12) target_hardness_kp&lt; 6.5 72    3.3265280  5.981944  
+         24) strength=High 54    1.9533330  5.955556 *
+         25) strength=Mid 18    1.2227780  6.061111 *
+       13) target_hardness_kp&gt;=6.5 1040  114.1005000  7.108173  
+         26) sampling_point=Beginning,Middle 307   31.9110100  7.057329 *
+         27) sampling_point=Pre-Start,End 733   81.0634900  7.129468  
+           54) speed_setting=Turret high / Feeder high 21    0.9714286  6.942857 *
+           55) speed_setting=Nominal,Turret high / Feeder low,Turret low / Feeder high,Turret low / Feeder low 712   79.3392000  7.134972  
+            110) speed_setting=Nominal,Turret low / Feeder high,Turret low / Feeder low 691   77.4431800  7.131983  
+              220) speed_setting=Turret low / Feeder high 22    1.3709090  7.063636 *
+              221) speed_setting=Nominal,Turret low / Feeder low 669   75.9661300  7.134230  
+                442) strength=High 314   36.5470400  7.121338  
+                  884) sampling_point=End 117   13.2492300  7.064103 *
+                  885) sampling_point=Pre-Start 197   22.6869000  7.155330 *
+                443) strength=Mid 355   39.3207300  7.145634  
+                  886) sampling_point=Pre-Start 232   26.0775400  7.107328 *
+                  887) sampling_point=End 123   12.2606500  7.217886 *
+            111) speed_setting=Turret high / Feeder low 21    1.6866670  7.233333 *
+      7) target_hardness_kp&gt;=7.75 184  139.1598000  9.251087  
+       14) target_hardness_kp&lt; 9.6 139   14.1241700  8.793525  
+         28) strength=Mid 85    5.2642350  8.668235 *
+         29) strength=High 54    5.4253700  8.990741 *
+       15) target_hardness_kp&gt;=9.6 45    6.0431110 10.664440  
+         30) strength=Mid 23    1.7991300 10.478260 *
+         31) strength=High 22    2.6131820 10.859090 *
+
+...
+and 0 more lines.</code></pre>
 </div>
 </div>
 </section>

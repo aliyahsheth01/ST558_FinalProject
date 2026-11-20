@@ -367,15 +367,15 @@ the minimum node size parameter at 20.
 
 | Parameter | Values considered | Meaning |
 |---|---|---|
-| `tree_depth` | 1, 3, 5, 7, 9 | Maximum number of splits along a root-to-leaf path |
-| `cost_complexity` | 0.0001, 0.001, 0.01, 0.1 | Complexity penalty; larger values favor smaller trees |
+| `tree_depth` | Every integer from 1 through 30 | Maximum number of splits along a root-to-leaf path |
+| `cost_complexity` | 0.000001, 0.00001, 0.0001, 0.001, 0.01, 0.1 | Complexity penalty; larger values favor smaller trees |
 | `min_n` | 20, fixed | Minimum number of records required for a node to be considered for further splitting |
 
 The depth values cover shallow through more flexible trees.
 The complexity penalties span several orders of magnitude to
 compare weaker and stronger restrictions on tree size.
 
-This grid contains 20 parameter combinations. I will compare them
+This grid contains 180 parameter combinations. I will compare them
 using the existing five cross-validation folds and select the
 combination with the lowest mean assessment RMSE.
 
@@ -394,18 +394,81 @@ tree_wf <- workflow() |>
   add_recipe(tablet_rec) |>
   add_model(tree_spec)
 
-# I create four complexity values and five depth values.
+# I compare six complexity penalties and 30 possible maximum depths.
 # Cost-complexity ranges use the log10 scale.
 tree_grid <- grid_regular(
-  cost_complexity(range = c(-4, -1)),
-  tree_depth(range = c(1L, 9L)),
-  levels = c(4, 5)
+  cost_complexity(range = c(-6, -1)),
+  tree_depth(range = c(1L, 30L)),
+  levels = c(6, 30)
 )
 
 # I inspect the workflow and candidate parameter combinations.
 tree_wf
 tree_grid
 nrow(tree_grid)
+```
+
+I expanded the initial grid after the best settings occurred at
+search boundaries. The final grid evaluates six complexity penalties
+and every integer maximum depth from 1 through 30.
+
+### Cross-validation results
+
+I evaluate the candidate parameter combinations using the five
+strength-stratified cross-validation folds created from the
+training data. RMSE is calculated on each assessment fold and
+averaged across folds to compare the candidate settings.
+
+```{r}
+# I set a seed for reproducible tuning.
+set.seed(560)
+
+# I evaluate the candidate settings using the training folds.
+tree_tune <- tune_grid(
+  tree_wf,
+  resamples = tablet_folds,
+  grid = tree_grid,
+  metrics = metric_set(rmse)
+)
+
+# I inspect the tuning output and any recorded warnings or errors.
+tree_tune
+collect_notes(tree_tune)
+
+# I summarize assessment RMSE and sort from lowest to highest.
+tree_results <- collect_metrics(tree_tune) |>
+  arrange(mean)
+
+tree_results
+
+# I identify the grid settings with the lowest mean RMSE.
+tree_best <- select_best(
+  tree_tune,
+  metric = "rmse"
+)
+
+tree_best
+```
+
+### Selected tree and training fit
+
+The selected configuration has a cost-complexity penalty of 0.00001
+and a maximum depth of 9. Its mean assessment RMSE across the five
+cross-validation folds is approximately 0.300 kp.
+
+I insert these selected settings into the workflow and fit the tree
+using all 2,030 training records. This fitted tree will later be
+compared with the tuned random forest using the held-out test data.
+
+```{r}
+# I replace the tuning placeholders with the selected parameter values.
+tree_final_wf <- finalize_workflow(tree_wf, tree_best)
+
+# I fit the selected tree using all training records.
+tree_train_fit <- fit(tree_final_wf, data = tablet_train)
+
+# I inspect the fitted workflow and tree.
+tree_train_fit
 ```
 
 ## Random Forest Model
