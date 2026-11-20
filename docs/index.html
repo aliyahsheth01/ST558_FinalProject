@@ -138,7 +138,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#five-fold-cross-validation" id="toc-five-fold-cross-validation" class="nav-link" data-scroll-target="#five-fold-cross-validation">Five-fold cross-validation</a></li>
   <li><a href="#modeling-recipe" id="toc-modeling-recipe" class="nav-link" data-scroll-target="#modeling-recipe">Modeling recipe</a></li>
   </ul></li>
-  <li><a href="#tree-model" id="toc-tree-model" class="nav-link" data-scroll-target="#tree-model">Tree Model</a></li>
+  <li><a href="#tree-model" id="toc-tree-model" class="nav-link" data-scroll-target="#tree-model">Tree Model</a>
+  <ul class="collapse">
+  <li><a href="#how-a-regression-tree-works" id="toc-how-a-regression-tree-works" class="nav-link" data-scroll-target="#how-a-regression-tree-works">How a regression tree works</a></li>
+  <li><a href="#model-specification-and-tuning-grid" id="toc-model-specification-and-tuning-grid" class="nav-link" data-scroll-target="#model-specification-and-tuning-grid">Model specification and tuning grid</a></li>
+  </ul></li>
   <li><a href="#random-forest-model" id="toc-random-forest-model" class="nav-link" data-scroll-target="#random-forest-model">Random Forest Model</a></li>
   <li><a href="#test-set-comparison-and-model-selection" id="toc-test-set-comparison-and-model-selection" class="nav-link" data-scroll-target="#test-set-comparison-and-model-selection">Test-Set Comparison and Model Selection</a></li>
   <li><a href="#final-model-fit" id="toc-final-model-fit" class="nav-link" data-scroll-target="#final-model-fit">Final Model Fit</a></li>
@@ -552,6 +556,123 @@ predictor: 4</code></pre>
 </section>
 <section id="tree-model" class="level2">
 <h2 class="anchored" data-anchor-id="tree-model">Tree Model</h2>
+<section id="how-a-regression-tree-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-a-regression-tree-works">How a regression tree works</h3>
+<p>A regression tree predicts a numeric outcome by repeatedly dividing records into two groups according to predictor values. Numeric predictors can be split at a threshold; categorical predictors can be split into groups of levels.</p>
+<p>At each node, the algorithm chooses the available split that most reduces the sum of squared deviations from the means of the resulting groups. This process repeats within the groups. It is a greedy procedure: it selects the best immediate split without searching every possible complete tree.</p>
+<p>A new tablet follows these rules to a terminal node, or leaf. Its prediction is the mean hardness of the training records in that leaf. Trees can capture nonlinear patterns and interactions, but deep trees may overfit and can change substantially when the training data change. I will use cross-validation to select tree complexity.</p>
+</section>
+<section id="model-specification-and-tuning-grid" class="level3">
+<h3 class="anchored" data-anchor-id="model-specification-and-tuning-grid">Model specification and tuning grid</h3>
+<p>I use the rpart engine in regression mode because measured hardness is numeric. I tune tree depth and cost complexity while holding the minimum node size parameter at 20.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Values considered</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tree_depth</code></td>
+<td>1, 3, 5, 7, 9</td>
+<td>Maximum number of splits along a root-to-leaf path</td>
+</tr>
+<tr class="even">
+<td><code>cost_complexity</code></td>
+<td>0.0001, 0.001, 0.01, 0.1</td>
+<td>Complexity penalty; larger values favor smaller trees</td>
+</tr>
+<tr class="odd">
+<td><code>min_n</code></td>
+<td>20, fixed</td>
+<td>Minimum number of records required for a node to be considered for further splitting</td>
+</tr>
+</tbody>
+</table>
+<p>The depth values cover shallow through more flexible trees. The complexity penalties span several orders of magnitude to compare weaker and stronger restrictions on tree size.</p>
+<p>This grid contains 20 parameter combinations. I will compare them using the existing five cross-validation folds and select the combination with the lowest mean assessment RMSE.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I define the tree model and identify the parameters to tune.</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>tree_spec <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">cost_complexity =</span> <span class="fu">tune</span>(),</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_n =</span> <span class="dv">20</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">"rpart"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="co"># I combine the shared recipe and tree specification.</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>tree_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(tablet_rec) <span class="sc">|&gt;</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(tree_spec)</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co"># I create four complexity values and five depth values.</span></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Cost-complexity ranges use the log10 scale.</span></span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>tree_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cost_complexity</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="sc">-</span><span class="dv">1</span>)),</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tree_depth</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>L, <span class="dv">9</span>L)),</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>)</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a><span class="co"># I inspect the workflow and candidate parameter combinations.</span></span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a>tree_wf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>══ Workflow ════════════════════════════════════════════════════════════════════
+Preprocessor: Recipe
+Model: decision_tree()
+
+── Preprocessor ────────────────────────────────────────────────────────────────
+0 Recipe Steps
+
+── Model ───────────────────────────────────────────────────────────────────────
+Decision Tree Model Specification (regression)
+
+Main Arguments:
+  cost_complexity = tune()
+  tree_depth = tune()
+  min_n = 20
+
+Computational engine: rpart </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>tree_grid</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 20 × 2
+   cost_complexity tree_depth
+             &lt;dbl&gt;      &lt;int&gt;
+ 1          0.0001          1
+ 2          0.001           1
+ 3          0.01            1
+ 4          0.1             1
+ 5          0.0001          3
+ 6          0.001           3
+ 7          0.01            3
+ 8          0.1             3
+ 9          0.0001          5
+10          0.001           5
+11          0.01            5
+12          0.1             5
+13          0.0001          7
+14          0.001           7
+15          0.01            7
+16          0.1             7
+17          0.0001          9
+18          0.001           9
+19          0.01            9
+20          0.1             9</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(tree_grid)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 20</code></pre>
+</div>
+</div>
+</section>
 </section>
 <section id="random-forest-model" class="level2">
 <h2 class="anchored" data-anchor-id="random-forest-model">Random Forest Model</h2>
