@@ -473,8 +473,247 @@ tree_train_fit
 
 ## Random Forest Model
 
+### How a random forest works
+
+A random forest combines many regression trees. Each tree is fitted
+to a bootstrap sample drawn with replacement from the training
+records, so some records can appear more than once in a sample.
+
+At each split, the algorithm randomly selects a subset of predictors
+and searches for a split among those predictors. The parameter
+`mtry` controls how many predictors are considered at each split.
+This additional randomness can reduce the correlation between trees.
+
+For a new tablet, each tree produces a predicted hardness. The
+random forest prediction is the average of those predictions.
+Averaging can reduce the variability associated with a single tree,
+although the resulting model is harder to interpret.
+
+When all predictors are considered at every split, the model uses
+the bagging special case. I include that possibility in the tuning
+grid. Cross-validation will determine which setting performs best
+for these data; improved performance over the single tree is not
+assumed.
+
+### Model specification and tuning grid
+
+I use the ranger engine in regression mode because measured hardness
+is numeric. I reuse the same four-predictor recipe and five
+cross-validation folds used for the regression tree.
+
+| Parameter | Values considered | Meaning |
+|---|---|---|
+| `mtry` | 1, 2, 3, 4 | Number of predictors randomly selected for consideration at each split |
+| `trees` | 500, fixed | Number of trees whose predictions are averaged |
+| `min_n` | 5, fixed | Minimum node size used to control further splitting |
+
+The recipe retains four predictor columns, so this grid evaluates
+every possible integer value of `mtry`. I select the setting with
+the lowest mean assessment RMSE across the five folds.
+
+```{r}
+# I define a regression forest and identify mtry for tuning.
+rf_spec <- rand_forest(
+  mtry = tune(),
+  trees = 500,
+  min_n = 5
+) |>
+  set_engine("ranger") |>
+  set_mode("regression")
+
+# I combine the shared recipe and random forest specification.
+rf_wf <- workflow() |>
+  add_recipe(tablet_rec) |>
+  add_model(rf_spec)
+
+# I evaluate every possible mtry value for the four predictors.
+rf_grid <- grid_regular(
+  mtry(range = c(1L, 4L)),
+  levels = 4
+)
+
+# I inspect the workflow and candidate settings.
+rf_wf
+rf_grid
+```
+
+### Cross-validation results
+
+I evaluate the four candidate settings using the existing training
+folds. I use the same RMSE metric as the regression tree.
+
+```{r}
+# I set a seed for reproducible random forest tuning.
+set.seed(561)
+
+# I evaluate the candidate settings using the training folds.
+rf_tune <- tune_grid(
+  rf_wf,
+  resamples = tablet_folds,
+  grid = rf_grid,
+  metrics = metric_set(rmse)
+)
+
+# I inspect the tuning output and recorded warnings or errors.
+rf_tune
+collect_notes(rf_tune)
+
+# I summarize assessment RMSE and sort from lowest to highest.
+rf_results <- collect_metrics(rf_tune) |>
+  arrange(mean)
+
+rf_results
+
+# I identify the mtry setting with the lowest mean RMSE.
+rf_best <- select_best(rf_tune, metric = "rmse")
+rf_best
+```
+
+### Selected forest and training fit
+
+Cross-validation selected mtry = 4, with a mean assessment RMSE of
+approximately 0.300 kp. I retain 500 trees and min_n = 5.
+
+With four predictors available, mtry = 4 considers all predictors
+at every split. This is the bagging special case included in the
+random forest search.
+
+I fit the selected configuration using all 2,030 training records.
+
+```{r}
+# I insert the selected mtry value into the forest workflow.
+rf_final_wf <- finalize_workflow(rf_wf, rf_best)
+
+# I set a seed for reproducible fitting of the selected forest.
+set.seed(562)
+
+# I fit the selected forest using all training records.
+rf_train_fit <- fit(rf_final_wf, data = tablet_train)
+
+# I inspect the fitted workflow and forest.
+rf_train_fit
+```
+
 ## Test-Set Comparison and Model Selection
+
+With tuning completed for both model families, I evaluate their
+predictions on the same 870 held-out test records. Both models
+were fitted using only the training records.
+
+I compare test-set RMSE in kiloponds. Following the project
+instructions, I will select the model with the lower test RMSE
+and refit its selected specification using all modeling records.
+
+The record-level validation limitation described earlier also
+applies to this comparison.
+
+```{r}
+# I predict hardness for the test records using the fitted tree.
+# I attach the observed records in the same row order.
+tree_test_predictions <- predict(
+  tree_train_fit,
+  new_data = tablet_test
+) |>
+  bind_cols(tablet_test)
+
+# I predict hardness for the same records using the fitted forest.
+rf_test_predictions <- predict(
+  rf_train_fit,
+  new_data = tablet_test
+) |>
+  bind_cols(tablet_test)
+
+# I calculate the tree's test-set RMSE.
+tree_test_metrics <- rmse(
+  tree_test_predictions,
+  truth = hardness_kp,
+  estimate = .pred
+) |>
+  mutate(model = "Regression tree")
+
+# I calculate the forest's test-set RMSE.
+rf_test_metrics <- rmse(
+  rf_test_predictions,
+  truth = hardness_kp,
+  estimate = .pred
+) |>
+  mutate(model = "Random forest")
+
+# I combine the results and sort from lowest to highest RMSE.
+test_comparison <- bind_rows(
+  tree_test_metrics,
+  rf_test_metrics
+) |>
+  select(model, rmse_kp = .estimate) |>
+  arrange(rmse_kp)
+
+# I display additional digits for comparing close results.
+print(as.data.frame(test_comparison), digits = 6)
+```
+
+The random forest has a test RMSE of 0.287529 kp, compared with
+0.287677 kp for the regression tree. I select the random forest
+because it has the lower test RMSE.
+
+The difference is approximately 0.000148 kp, so the two models
+have very similar predictive performance on this split.
 
 ## Final Model Fit
 
+After model selection, I refit the selected random forest using
+all 2,900 modeling records. I retain mtry = 4, 500 trees, and
+min_n = 5.
+
+The test-set scores reported above describe the earlier models
+fitted using 2,030 training records. The following fit uses all
+available modeling records to prepare the model for the API.
+
+```{r}
+# I set a seed for reproducible fitting of the final forest.
+set.seed(563)
+
+# I refit the selected workflow using all modeling records.
+final_model <- fit(rf_final_wf, data = model_data)
+
+# I inspect the final fitted workflow.
+final_model
+
+# I create the model folder if it does not already exist.
+dir.create("models", showWarnings = FALSE)
+
+# I save the complete fitted workflow for the API.
+saveRDS(final_model, file = "models/final_model.rds")
+
+# I reload the saved workflow.
+saved_model <- readRDS("models/final_model.rds")
+
+# I confirm that saving and reloading preserves example predictions.
+all.equal(
+  predict(final_model, new_data = model_data[1:3, ]),
+  predict(saved_model, new_data = model_data[1:3, ])
+)
+```
+
 ## Conclusions and Limitations
+
+Both models predicted measured tablet hardness with a test RMSE
+of approximately 0.288 kp. The random forest was selected because
+its test RMSE was slightly lower. The final forest was refitted
+using all 2,900 modeling records and saved for use by the API.
+
+The training/test split and cross-validation assigned individual
+tablet records. Records from the same lot or sample could occur
+in both training and assessment data. These results therefore
+describe predictions for held-out tablets within the manufacturing
+groups represented in this dataset. Evaluating performance on
+entirely new lots or blends would require grouped validation.
+
+The analysis includes only records with observed hardness.
+The 1,950 records without measured hardness were excluded, so
+the results may not represent those excluded records. Missing
+Registration target hardness values were restored using the
+predefined settings documented in Project 2.
+
+The models describe predictive associations among the selected
+variables. They do not establish causal effects of changing
+compression settings.

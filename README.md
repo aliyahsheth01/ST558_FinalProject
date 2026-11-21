@@ -39,6 +39,7 @@ and the resulting modeling sample will be documented in the report.
 | `index.qmd` | Source for the modeling report |
 | `_quarto.yml` | Website configuration |
 | `docs/` | Rendered website and supporting files |
+| `models/final_model.rds` | Selected random forest workflow fitted using all modeling records |
 
 ## Render the Report
 
@@ -55,7 +56,12 @@ The rendered report is saved as `docs/index.html`.
 
 ## Project Status
 
-Data preparation, missing-value checks, the reproducible 70/30
-training/test split, five-fold cross-validation, and the modeling
-recipe are complete. Model fitting, API development, and Docker
-packaging are planned next.
+Data preparation, five-fold cross-validation, regression tree and
+random forest tuning, and test-set comparison are complete.
+
+The random forest was selected with a test RMSE of 0.287529 kp.
+The final workflow was refitted using all 2,900 modeling records
+and saved as `models/final_model.rds`.
+
+API development, Docker packaging, and the demonstration video
+are the remaining project tasks.
