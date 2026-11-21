@@ -694,6 +694,43 @@ all.equal(
 )
 ```
 
+### Prediction input defaults
+
+I calculate default API inputs from the 2,900 modeling records.
+The numeric predictor uses its mean, and each categorical predictor
+uses its most frequent category. I also save the factor levels
+needed to prepare prediction inputs consistently with the model.
+
+```{r}
+# I define a function that returns the most frequent category.
+# If categories tie, I use the first category in the frequency table.
+get_mode <- function(x) {
+  counts <- table(x)
+  names(counts)[which.max(counts)]
+}
+
+# I store the default inputs and the model's categorical levels.
+api_inputs <- list(
+  defaults = list(
+    strength = get_mode(model_data$strength),
+    target_hardness_kp = mean(model_data$target_hardness_kp),
+    sampling_point = get_mode(model_data$sampling_point),
+    speed_setting = get_mode(model_data$speed_setting)
+  ),
+  factor_levels = list(
+    strength = levels(model_data$strength),
+    sampling_point = levels(model_data$sampling_point),
+    speed_setting = levels(model_data$speed_setting)
+  )
+)
+
+# I save this information for the prediction endpoint.
+saveRDS(api_inputs, file = "models/api_inputs.rds")
+
+# I inspect the calculated defaults and supported categories.
+api_inputs
+```
+
 ## Conclusions and Limitations
 
 Both models predicted measured tablet hardness with a test RMSE

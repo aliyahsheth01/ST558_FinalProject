@@ -5,4 +5,4 @@ library(plumber)
 api <- plumb("plumber.R")
 
 # I start the API locally on port 8000.
-api$run(port = 8000)
+api$run(port = 8000, debug = FALSE)

@@ -153,7 +153,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#selected-forest-and-training-fit" id="toc-selected-forest-and-training-fit" class="nav-link" data-scroll-target="#selected-forest-and-training-fit">Selected forest and training fit</a></li>
   </ul></li>
   <li><a href="#test-set-comparison-and-model-selection" id="toc-test-set-comparison-and-model-selection" class="nav-link" data-scroll-target="#test-set-comparison-and-model-selection">Test-Set Comparison and Model Selection</a></li>
-  <li><a href="#final-model-fit" id="toc-final-model-fit" class="nav-link" data-scroll-target="#final-model-fit">Final Model Fit</a></li>
+  <li><a href="#final-model-fit" id="toc-final-model-fit" class="nav-link" data-scroll-target="#final-model-fit">Final Model Fit</a>
+  <ul class="collapse">
+  <li><a href="#prediction-input-defaults" id="toc-prediction-input-defaults" class="nav-link" data-scroll-target="#prediction-input-defaults">Prediction input defaults</a></li>
+  </ul></li>
   <li><a href="#conclusions-and-limitations" id="toc-conclusions-and-limitations" class="nav-link" data-scroll-target="#conclusions-and-limitations">Conclusions and Limitations</a></li>
   </ul>
 </nav>
@@ -1135,6 +1138,66 @@ R squared (OOB):                  0.9715264 </code></pre>
 <pre><code>[1] TRUE</code></pre>
 </div>
 </div>
+<section id="prediction-input-defaults" class="level3">
+<h3 class="anchored" data-anchor-id="prediction-input-defaults">Prediction input defaults</h3>
+<p>I calculate default API inputs from the 2,900 modeling records. The numeric predictor uses its mean, and each categorical predictor uses its most frequent category. I also save the factor levels needed to prepare prediction inputs consistently with the model.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="co"># I define a function that returns the most frequent category.</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a><span class="co"># If categories tie, I use the first category in the frequency table.</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>get_mode <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>  counts <span class="ot">&lt;-</span> <span class="fu">table</span>(x)</span>
+<span id="cb75-5"><a href="#cb75-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(counts)[<span class="fu">which.max</span>(counts)]</span>
+<span id="cb75-6"><a href="#cb75-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb75-7"><a href="#cb75-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-8"><a href="#cb75-8" aria-hidden="true" tabindex="-1"></a><span class="co"># I store the default inputs and the model's categorical levels.</span></span>
+<span id="cb75-9"><a href="#cb75-9" aria-hidden="true" tabindex="-1"></a>api_inputs <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb75-10"><a href="#cb75-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">defaults =</span> <span class="fu">list</span>(</span>
+<span id="cb75-11"><a href="#cb75-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">strength =</span> <span class="fu">get_mode</span>(model_data<span class="sc">$</span>strength),</span>
+<span id="cb75-12"><a href="#cb75-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">target_hardness_kp =</span> <span class="fu">mean</span>(model_data<span class="sc">$</span>target_hardness_kp),</span>
+<span id="cb75-13"><a href="#cb75-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">sampling_point =</span> <span class="fu">get_mode</span>(model_data<span class="sc">$</span>sampling_point),</span>
+<span id="cb75-14"><a href="#cb75-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">speed_setting =</span> <span class="fu">get_mode</span>(model_data<span class="sc">$</span>speed_setting)</span>
+<span id="cb75-15"><a href="#cb75-15" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb75-16"><a href="#cb75-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">factor_levels =</span> <span class="fu">list</span>(</span>
+<span id="cb75-17"><a href="#cb75-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">strength =</span> <span class="fu">levels</span>(model_data<span class="sc">$</span>strength),</span>
+<span id="cb75-18"><a href="#cb75-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">sampling_point =</span> <span class="fu">levels</span>(model_data<span class="sc">$</span>sampling_point),</span>
+<span id="cb75-19"><a href="#cb75-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">speed_setting =</span> <span class="fu">levels</span>(model_data<span class="sc">$</span>speed_setting)</span>
+<span id="cb75-20"><a href="#cb75-20" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb75-21"><a href="#cb75-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb75-22"><a href="#cb75-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-23"><a href="#cb75-23" aria-hidden="true" tabindex="-1"></a><span class="co"># I save this information for the prediction endpoint.</span></span>
+<span id="cb75-24"><a href="#cb75-24" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(api_inputs, <span class="at">file =</span> <span class="st">"models/api_inputs.rds"</span>)</span>
+<span id="cb75-25"><a href="#cb75-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-26"><a href="#cb75-26" aria-hidden="true" tabindex="-1"></a><span class="co"># I inspect the calculated defaults and supported categories.</span></span>
+<span id="cb75-27"><a href="#cb75-27" aria-hidden="true" tabindex="-1"></a>api_inputs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$defaults
+$defaults$strength
+[1] "Mid"
+
+$defaults$target_hardness_kp
+[1] 6.077586
+
+$defaults$sampling_point
+[1] "Pre-Start"
+
+$defaults$speed_setting
+[1] "Nominal"
+
+
+$factor_levels
+$factor_levels$strength
+[1] "Low"  "Mid"  "High"
+
+$factor_levels$sampling_point
+[1] "Pre-Start" "Beginning" "Middle"    "End"      
+
+$factor_levels$speed_setting
+[1] "Nominal"                   "Turret high / Feeder high"
+[3] "Turret high / Feeder low"  "Turret low / Feeder high" 
+[5] "Turret low / Feeder low"  </code></pre>
+</div>
+</div>
+</section>
 </section>
 <section id="conclusions-and-limitations" class="level2">
 <h2 class="anchored" data-anchor-id="conclusions-and-limitations">Conclusions and Limitations</h2>
