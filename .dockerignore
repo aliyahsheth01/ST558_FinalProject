@@ -1,0 +1,20 @@
+# I exclude Git, editor files, and local rendering output.
+.git
+.Rproj.user
+.quarto
+docs
+site_libs
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+
+# I exclude files used to prepare or describe the analysis.
+data
+*.Rproj
+*.qmd
+*.md
+
+# I exclude exported Docker image archives.
+*.tar
+*.tar.gz

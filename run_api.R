@@ -4,5 +4,9 @@ library(plumber)
 # I read the endpoint definitions from the API file.
 api <- plumb("plumber.R")
 
-# I start the API locally on port 8000.
-api$run(port = 8000, debug = FALSE)
+# I listen on all interfaces so the API can receive container traffic.
+api$run(
+  host = "0.0.0.0",
+  port = 8000,
+  debug = FALSE
+)

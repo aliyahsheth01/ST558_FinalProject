@@ -3,7 +3,7 @@
 This individual project compares a regression tree and a random
 forest for predicting tablet hardness using tidymodels. The selected
 random forest is served through a plumber API that runs locally.
-Docker packaging is the next project stage.
+The API can also run inside a Docker container.
 
 [View the modeling report](https://aliyahsheth01.github.io/ST558_FinalProject/)
 
@@ -63,6 +63,8 @@ entirely new lots or blends would require grouped validation.
 | `models/api_inputs.rds` | Calculated default inputs and supported factor levels |
 | `plumber.R` | API endpoint definitions and input validation |
 | `run_api.R` | Starts the API locally on port 8000 |
+| `Dockerfile` | Builds the API image using R 4.6.1 |
+| `.dockerignore` | Excludes analysis files and image archives from the build context |
 
 ## Required Packages
 
@@ -126,8 +128,58 @@ prediction endpoint in `plumber.R`.
 
 To stop the API, press Esc or click the Stop button in RStudio.
 
+## Build and Run with Docker
+
+Start Docker Desktop. From the project's main folder, build the image:
+
+```bash
+docker build --platform linux/amd64 --progress=plain -t st558-finalproject:1.0 .
+```
+
+The image targets Linux AMD64. Docker Desktop can run it on
+Apple Silicon through emulation.
+
+Stop any API running in RStudio so port 8000 is available.
+Create and start a new container:
+
+```bash
+docker run -d \
+  --platform linux/amd64 \
+  --name st558-api \
+  -p 127.0.0.1:8000:8000 \
+  st558-finalproject:1.0
+```
+
+Check the container and its startup logs:
+
+```bash
+docker ps --filter name=st558-api
+docker logs --tail 30 st558-api
+```
+
+With the container running, use the same `/info` and `/pred`
+links listed above.
+
+Both endpoints and the three example predictions were tested
+inside Docker. The prediction results matched the local API.
+An unsupported strength returned HTTP status 400.
+
+Stop the container:
+
+```bash
+docker stop st558-api
+```
+
+Restart that existing container:
+
+```bash
+docker start st558-api
+```
+
 ## Project Status
 
-The modeling report and local API implementation are complete.
-Docker packaging, final review, and the narrated demonstration
-video remain.
+The modeling report, API, and Docker image build are complete.
+The API has been tested successfully inside the container.
+
+Image archive delivery, final review, and the narrated
+demonstration video remain.
