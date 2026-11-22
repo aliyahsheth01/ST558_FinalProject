@@ -176,10 +176,28 @@ Restart that existing container:
 docker start st558-api
 ```
 
+## Load the Saved Docker Image
+
+[Download the Docker image archive](https://drive.google.com/file/d/1sKr94KnVnyMD37eng-eRMgQZlt1zdh6M/view?usp=drive_link)
+
+The archive is approximately 489 MB and contains
+`st558-finalproject:1.0`, built for `linux/amd64`.
+
+From the folder containing the downloaded archive, run:
+
+```bash
+docker image load -i st558-finalproject-1.0.tar.gz
+```
+
+After loading, use the `docker run` command in the Docker section
+above to create and start a container.
+
+The archive was successfully loaded locally before submission.
+
 ## Project Status
 
-The modeling report, API, and Docker image build are complete.
-The API has been tested successfully inside the container.
+The modeling report, API, Docker image, and uploaded image archive
+are complete. Both endpoints and the three example predictions
+were verified inside Docker.
 
-Image archive delivery, final review, and the narrated
-demonstration video remain.
+Final project review and the narrated demonstration video remain.
