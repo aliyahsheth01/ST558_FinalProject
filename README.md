@@ -200,4 +200,4 @@ The modeling report, API, Docker image, and uploaded image archive
 are complete. Both endpoints and the three example predictions
 were verified inside Docker.
 
-Final project review and the narrated demonstration video remain.
+The narrated demonstration video has been recorded for submission.
